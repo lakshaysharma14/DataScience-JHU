@@ -52,6 +52,5 @@ rankall <- function(outcome, num = "best"){
     } else {
       stop('invalid num')
     }
-  }
-  return(output)
+  } return(output)
 }
