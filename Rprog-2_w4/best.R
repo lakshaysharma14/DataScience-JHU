@@ -27,6 +27,5 @@ best <- function(state, outcome) {
     min_val <- min(oi, na.rm = TRUE)
     result  <- ts[, "hospital"][which(oi == min_val)]
     output  <- result[order(result)]
-  }
-  return(output)
+  }return(output)
 }
