@@ -28,11 +28,6 @@ library(dplyr)
 NEI <- readRDS("./EDA_C4_P2/summarySCC_PM25.rds")
 SCC <- readRDS("./EDA_C4_P2/Source_Classification_Code.rds")
 
-#if(!exists("NEISCC"))
-#{
-#  NEISCC <- inner_join(NEI, SCC, by="SCC")
-#}
-
 subsetNEI_Baltimore <-summarise(group_by(filter(NEI, fips == "24510"& type == 'ON-ROAD'), year), Emissions=sum(Emissions))
 subsetNEI_LosAngeles <- summarise(group_by(filter(NEI, fips == "06037"& type == 'ON-ROAD'), year), Emissions=sum(Emissions))
 
