@@ -1,0 +1,167 @@
+-----------------------------------------------------------------------------------------------------------
+title: "C5_W4_A2"
+author: "Lakshay Sharma"
+date: "10/07/2019"
+output:
+  html_document:
+    keep_md: true
+---------------------------------------------------------------------------------------------------------
+#                              **Reproducible Research Course Project-2**
+
+## **Synopsis:**
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+## Purpose
+#### The purpose of this assignment is:-
+  1.to make us learn to generate RMarkdown document
+  2.to know the importance of reproducibility
+  3.to analyse the data and produce answers for the given questions
+
+## Import Libraries and Set Default Settings :-
+```{r setup,import_libs,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = FALSE)
+
+library(dplyr)
+library(ggplot2)
+library(R.utils)
+```
+
+#### Preprocessing and Downloading the Data
+```{r}
+temp <- tempfile()
+
+if(!file.exists("/StormData.csv.bz2"))
+{ download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2",          destfile="./StormData.csv.bz2") 
+}
+
+if(!file.exists("StormData.csv"))
+{ unzip2("StormData.csv.bz2","StormData.csv",remove=F)
+}
+```
+
+#### Loading the Data
+```{r}
+  storm <- read.csv("StormData.csv",header=TRUE,sep=",")
+  head(storm)
+```
+
+## **RESULTS**
+### 1.With respect to the Population Health, there are two damages caused : **fatalities and injuries**.
+
+####They are analysed below :-
+
+```{r}
+fatalInjuries <- aggregate(FATALITIES ~ EVTYPE, data=storm , FUN=sum , na.rm=TRUE)
+fatalInjuries  <- fatalInjuries[with(fatalInjuries,order(-FATALITIES)),]
+fatalInjuries  <- head(fatalInjuries,20)
+print(fatalInjuries )
+````
+
+```{r}
+Injury <- aggregate(INJURIES~EVTYPE,data=storm,FUN=sum,na.rm=TRUE)
+Injury <- Injury[with(Injury,order(-INJURIES)),]
+Injury <- head(Injury,10)
+print(Injury)
+```
+
+###Plot of graph showing the top 10 Fatalities and Injuries
+```{r}
+par(mfrow=c(1,2),mar=c(10,3,3,2))
+barplot(fatalInjuries$FATALITIES,names.arg=fatalInjuries$EVTYPE,las=2,col="pink",ylab="Fatalities",main="Harmful Events - Fatalities")
+
+barplot(Injury$INJURIES,names.arg=Injury$EVTYPE,las=2,col="pink",ylab="injuries",main="Harmful Events - Injuries")
+
+```
+
+## **Health Assessment**
+####Tornado's cause the largest weather-related risk to the overall population health.
+
+### 2.With respect to the Ecomonic Consequneces, there are two damages caused: **Property and Crop Damage**.
+
+#### Property damage(PROPDMG) and Crop damage(CROPDMG) columns has another column(exponents) related to it, i.e PROPDMGEXP and CROPDMGEXP respectively. So, for the calculation of the total property and crop damages caused, we need to convert the exponent columns into numeric data.
+
+#### Converting the magnitude into the multiplier used for calculating damage amount.
+Using the following key to identify the multiplier for the orders of magnitude.
+1. o(one) = 1
+2. h(undred)=100
+3. k(thousand)=1000
+4. m(million)=1000000
+5. b(billion)=1000000000
+
+```{r}
+
+storm$PROPDMG[storm$PROPDMGEXP == "K"] <- storm$PROPDMG[storm$PROPDMGEXP == "K"] * 1000
+storm$PROPDMG[storm$PROPDMGEXP == "M"] <- storm$PROPDMG[storm$PROPDMGEXP == "M"] * (10^6)
+storm$PROPDMG[storm$PROPDMGEXP == "H"] <- storm$PROPDMG[storm$PROPDMGEXP == "H"] * 100
+storm$PROPDMG[storm$PROPDMGEXP == "h"] <- storm$PROPDMG[storm$PROPDMGEXP == "h"] * 100
+storm$PROPDMG[storm$PROPDMGEXP == ""] <- storm$PROPDMG[storm$PROPDMGEXP == ""] * 1
+storm$PROPDMG[storm$PROPDMGEXP == "B"] <- storm$PROPDMG[storm$PROPDMGEXP == "B"] * (10^9)
+storm$PROPDMG[storm$PROPDMGEXP == "m"] <- storm$PROPDMG[storm$PROPDMGEXP == "m"] * (10^6)
+storm$PROPDMG[storm$PROPDMGEXP == "0"] <- storm$PROPDMG[storm$PROPDMGEXP == "0"] * 1
+storm$PROPDMG[storm$PROPDMGEXP == "1"] <- storm$PROPDMG[storm$PROPDMGEXP == "1"] * 10
+storm$PROPDMG[storm$PROPDMGEXP == "2"] <- storm$PROPDMG[storm$PROPDMGEXP == "2"] * 100
+storm$PROPDMG[storm$PROPDMGEXP == "3"] <- storm$PROPDMG[storm$PROPDMGEXP == "3"] * 1000
+storm$PROPDMG[storm$PROPDMGEXP == "4"] <- storm$PROPDMG[storm$PROPDMGEXP == "4"] * (10^4)
+storm$PROPDMG[storm$PROPDMGEXP == "5"] <- storm$PROPDMG[storm$PROPDMGEXP == "5"] * (10^5)
+storm$PROPDMG[storm$PROPDMGEXP == "6"] <- storm$PROPDMG[storm$PROPDMGEXP == "6"] * (10^6)
+storm$PROPDMG[storm$PROPDMGEXP == "7"] <- storm$PROPDMG[storm$PROPDMGEXP == "7"] * (10^7)
+storm$PROPDMG[storm$PROPDMGEXP == "8"] <- storm$PROPDMG[storm$PROPDMGEXP == "8"] * (10^8)
+storm$PROPDMG[storm$PROPDMGEXP == "+"] <- 0
+storm$PROPDMG[storm$PROPDMGEXP == "-"] <- 0
+storm$PROPDMG[storm$PROPDMGEXP == "?"] <- 0
+head(storm[,c("EVTYPE","PROPDMG","PROPDMGEXP")])
+
+```
+
+```{r}
+storm$CROPDMG[storm$CROPDMGEXP == "M"] <- storm$CROPDMG[storm$CROPDMGEXP == "M"] * (10^6)
+storm$CROPDMG[storm$CROPDMGEXP == "K"] <- storm$CROPDMG[storm$CROPDMGEXP == "K"] * 1000
+storm$CROPDMG[storm$CROPDMGEXP == "m"] <- storm$CROPDMG[storm$CROPDMGEXP == "m"] * (10^6)
+storm$CROPDMG[storm$CROPDMGEXP == "B"] <- storm$CROPDMG[storm$CROPDMGEXP == "B"] * (10^9)
+storm$CROPDMG[storm$CROPDMGEXP == "k"] <- storm$CROPDMG[storm$CROPDMGEXP == "k"] * 1000
+storm$CROPDMG[storm$CROPDMGEXP == "0"] <- storm$CROPDMG[storm$CROPDMGEXP == "0"] * 1
+storm$CROPDMG[storm$CROPDMGEXP == "2"] <- storm$CROPDMG[storm$CROPDMGEXP == "2"] * 100
+storm$CROPDMG[storm$CROPDMGEXP == ""] <- storm$CROPDMG[storm$CROPDMGEXP == ""] * 1
+storm$CROPDMG[storm$CROPDMGEXP == "?"] <- 0
+head(storm[,c("EVTYPE","CROPDMG","CROPDMGEXP")])
+```
+
+#### Property Damage
+```{r}
+propdmg <- aggregate(PROPDMG~EVTYPE,data=storm,FUN=sum,na.rm=TRUE)
+propdmg <- propdmg[with(propdmg,order(-PROPDMG)),]
+propdmg <- head(propdmg,10)
+print(propdmg)
+
+```
+
+#### Crop Damage
+```{r}
+cropdmg <- aggregate(CROPDMG~EVTYPE,data=storm,FUN=sum,na.rm=TRUE)
+cropdmg <- cropdmg[with(cropdmg,order(-CROPDMG)),]
+cropdmg <- head(cropdmg,10)
+print(cropdmg)
+```
+
+
+
+##Plot the Graph showing the top 10 property and crop damages
+```{r}
+par(mfrow=c(1,2),mar=c(10,3,3,2))
+barplot(propdmg$PROPDMG/(10^9),names.arg=propdmg$EVTYPE,las=2,col="red",ylab="Prop.damage(billions)",main="Economic Consequences on Property Damages")
+barplot(cropdmg$CROPDMG/(10^9),names.arg=cropdmg$EVTYPE,las=2,col="red",ylab="Crop damage(billions)",main="Economic Consequences on Crop Damages")
+```
+
+## **Economic Impact**
+##### Drought has the largest impact on crops whereas Flooding produces the largest overall weather-related impact to the economy.
+
+
+
+
+
+
+
+
+
